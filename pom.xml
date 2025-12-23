@@ -21,7 +21,7 @@
 		<jjwt.version>0.12.3</jjwt.version>
 		<modelmapper.version>3.2.0</modelmapper.version>
 		<aws.sdk.version>2.25.0</aws.sdk.version>
-		<razorpay.version>1.4.4</razorpay.version>
+		<razorpay.version>1.4.8</razorpay.version>
 		<openapi.version>2.5.0</openapi.version>
 		<postgresql.version>42.7.2</postgresql.version>
 		<argon2.version>2.11</argon2.version>
@@ -75,6 +75,11 @@
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-freemarker</artifactId>
+		</dependency>
+
 		<!-- ========== Database ========== -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -85,6 +90,11 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
 			<version>${flyway.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.persistence</groupId>
+			<artifactId>jakarta.persistence-api</artifactId>
 		</dependency>
 
 		<!-- ========== Security & JWT ========== -->
@@ -110,6 +120,12 @@
 			<artifactId>spring-security-crypto</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20231013</version>
+		</dependency>
+
+		<dependency>
 			<groupId>de.mkammerer</groupId>
 			<artifactId>argon2-jvm</artifactId>
 			<version>${argon2.version}</version>
@@ -134,6 +150,39 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>url-connection-client</artifactId>
+			<version>${aws.sdk.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>ses</artifactId>
+			<version>${aws.sdk.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>sdk-core</artifactId>
+			<version>${aws.sdk.version}</version>
+		</dependency>
+
+		<!-- AWS SDK v2 Auth (required) -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>auth</artifactId>
+			<version>${aws.sdk.version}</version>
+		</dependency>
+
+		<!-- AWS SDK v2 Regions (required) -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>regions</artifactId>
+			<version>${aws.sdk.version}</version>
+		</dependency>
+
+		<!-- AWS SDK v2 HTTP Client (Apache) -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>apache-client</artifactId>
 			<version>${aws.sdk.version}</version>
 		</dependency>
 
@@ -226,6 +275,14 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>${testcontainers.version}</version>
@@ -265,6 +322,25 @@
 			<artifactId>mockito-junit-jupiter</artifactId>
 			<version>${mockito.version}</version>
 			<scope>test</scope>
+		</dependency>
+		<!-- Spring Boot Starter Mail (for Spring Boot 3+) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
+		<!-- Jakarta Mail API (Spring Boot 3 uses Jakarta, not javax) -->
+		<dependency>
+			<groupId>org.eclipse.angus</groupId>
+			<artifactId>angus-mail</artifactId>
+			<version>2.0.2</version>
+		</dependency>
+
+		<!-- OR if you want Jakarta Mail directly -->
+		<dependency>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>jakarta.mail</artifactId>
+			<version>2.0.1</version>
 		</dependency>
 	</dependencies>
 
