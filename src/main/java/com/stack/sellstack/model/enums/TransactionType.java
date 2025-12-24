@@ -5,5 +5,8 @@ public enum TransactionType {
     REFUND,
     PAYOUT,
     CHARGEBACK,
-    FEE
+    FEE,
+    ADJUSTMENT,
+    CREDIT,
+    DEBIT
 }

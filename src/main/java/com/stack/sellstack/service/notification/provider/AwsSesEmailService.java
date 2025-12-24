@@ -13,6 +13,8 @@ import com.stack.sellstack.service.notification.EmailService;
 import com.stack.sellstack.service.notification.EmailTemplateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -148,8 +150,9 @@ public class AwsSesEmailService implements EmailService {
     @Transactional
     public void processEmailQueue() {
         Date currentTime = new Date();
+        Pageable limit = PageRequest.of(0, 100); // First page, 100 records
         List<EmailQueue> pendingEmails = emailQueueRepository
-                .findPendingEmails(currentTime, 100); // Process 100 at a time
+                .findPendingEmailsWithLimit(currentTime, limit);
 
         log.info("Processing {} pending emails from queue", pendingEmails.size());
 

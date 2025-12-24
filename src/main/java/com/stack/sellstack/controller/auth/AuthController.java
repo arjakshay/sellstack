@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -236,8 +237,19 @@ public class AuthController {
             String accessToken = jwtTokenProvider.createAccessToken(authentication, deviceId);
             String refreshToken = jwtTokenProvider.createRefreshToken(authentication, deviceId);
 
-            // Create session
-            deviceService.createSession(seller.getId(), deviceId, refreshToken, httpRequest);
+            try {
+                // Create or update session
+                deviceService.createSession(seller.getId(), deviceId, refreshToken, httpRequest);
+            } catch (DataIntegrityViolationException e) {
+                // Handle duplicate session constraint violation
+                log.warn("Duplicate session detected for seller: {}, device: {}",
+                        seller.getId(), deviceId);
+                // You could either:
+                // 1. Update existing session (as done in the DeviceService fix above)
+                // 2. Revoke old session and create new one
+                // 3. Return error to user
+                throw new BusinessException("Session already exists. Please logout first or try again.");
+            }
 
             // Security audit
             securityAuditService.logLoginSuccess(
@@ -270,10 +282,16 @@ public class AuthController {
         } catch (AuthenticationException e) {
             throw e; // Re-throw our custom exceptions
         } catch (Exception e) {
+            // Truncate error message for audit log
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && errorMessage.length() > 500) {
+                errorMessage = errorMessage.substring(0, 500) + "...";
+            }
+
             securityAuditService.logLoginFailed(
                     request.getUsername(),
                     SecurityUtils.getClientIP(httpRequest),
-                    e.getMessage()
+                    errorMessage
             );
             throw new AuthenticationException("Invalid credentials");
         }

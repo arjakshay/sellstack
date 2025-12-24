@@ -1,6 +1,7 @@
 package com.stack.sellstack.repository;
 
 import com.stack.sellstack.model.entity.WhatsAppQueue;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,8 +21,15 @@ public interface WhatsAppQueueRepository extends JpaRepository<WhatsAppQueue, UU
     @Query("SELECT wq FROM WhatsAppQueue wq WHERE wq.status = 'PENDING' AND wq.sendAfter <= :currentTime ORDER BY wq.priority DESC, wq.createdAt ASC")
     List<WhatsAppQueue> findPendingMessages(@Param("currentTime") Date currentTime);
 
+    // FIX: Rename second method or use Pageable
     @Query("SELECT wq FROM WhatsAppQueue wq WHERE wq.status = 'PENDING' AND wq.sendAfter <= :currentTime ORDER BY wq.priority DESC, wq.createdAt ASC")
-    List<WhatsAppQueue> findPendingMessages(@Param("currentTime") Date currentTime, @Param("limit") int limit);
+    List<WhatsAppQueue> findPendingMessagesWithLimit(@Param("currentTime") Date currentTime, Pageable pageable);
+
+    // OR use native query with LIMIT
+    @Query(value = "SELECT * FROM whatsapp_queue wq WHERE wq.status = 'PENDING' AND wq.send_after <= :currentTime " +
+            "ORDER BY wq.priority DESC, wq.created_at ASC LIMIT :limit",
+            nativeQuery = true)
+    List<WhatsAppQueue> findPendingMessagesNative(@Param("currentTime") Date currentTime, @Param("limit") int limit);
 
     Optional<WhatsAppQueue> findByProviderMessageId(String providerMessageId);
 
@@ -31,20 +39,27 @@ public interface WhatsAppQueueRepository extends JpaRepository<WhatsAppQueue, UU
     @Query("SELECT COUNT(wq) FROM WhatsAppQueue wq WHERE wq.status = 'FAILED' AND wq.updatedAt >= :since")
     long countRecentFailures(@Param("since") LocalDateTime since);
 
+    // FIX: Use FUNCTION('DATE', ...) for LocalDateTime
     @Query("SELECT COUNT(wq) as attempted, " +
             "SUM(CASE WHEN wq.status = 'SENT' THEN 1 ELSE 0 END) as sent, " +
             "SUM(CASE WHEN wq.status = 'DELIVERED' THEN 1 ELSE 0 END) as delivered, " +
             "SUM(CASE WHEN wq.status = 'FAILED' THEN 1 ELSE 0 END) as failed " +
             "FROM WhatsAppQueue wq " +
-            "WHERE DATE(wq.createdAt) = :date")
+            "WHERE FUNCTION('DATE', wq.createdAt) = :date")
     Map<String, Object> getDailyStatistics(@Param("date") LocalDate date);
 
     @Query("SELECT wq FROM WhatsAppQueue wq WHERE wq.sellerId = :sellerId AND wq.status = :status ORDER BY wq.createdAt DESC")
     List<WhatsAppQueue> findBySellerIdAndStatus(@Param("sellerId") String sellerId, @Param("status") String status);
 
-    @Query("SELECT COUNT(wq) FROM WhatsAppQueue wq WHERE wq.sellerId = :sellerId AND DATE(wq.createdAt) = CURRENT_DATE")
-    long countTodayMessagesBySeller(@Param("sellerId") String sellerId);
+    // FIX: This method has the same DATE() issue
+    @Query("SELECT COUNT(wq) FROM WhatsAppQueue wq WHERE wq.sellerId = :sellerId " +
+            "AND wq.createdAt >= :startOfDay AND wq.createdAt < :endOfDay")
+    long countTodayMessagesBySeller(
+            @Param("sellerId") String sellerId,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay);
 
+    // TODO: Update method names if you want consistency with EmailQueueRepository
     long countBySellerIdAndCreatedAtBetween(String sellerId, LocalDate start, LocalDate end);
     long countByCreatedAtBetween(LocalDate start, LocalDate end);
     long countBySellerIdAndStatusAndCreatedAtBetween(String sellerId, String status, LocalDate start, LocalDate end);

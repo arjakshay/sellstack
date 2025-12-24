@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -329,5 +330,22 @@ public class NotificationService {
         </body>
         </html>
         """.formatted(buyerName, productTitle, productTitle, amount, orderId);
+    }
+
+    public void sendBalanceCreditedNotification(UUID sellerId, BigDecimal amount, UUID transactionId) {
+        log.info("Balance credited notification sent to seller: {}, amount: {}, transaction: {}",
+                sellerId, amount, transactionId);
+        // Implement actual notification (email, SMS, push)
+    }
+
+    public void sendPayoutRequestedNotification(UUID sellerId, BigDecimal amount, UUID payoutId) {
+        log.info("Payout requested notification sent to seller: {}, amount: {}, payout: {}",
+                sellerId, amount, payoutId);
+        // Implement actual notification
+    }
+
+    public void sendBalanceDebitedNotification(UUID sellerId, BigDecimal amount, UUID transactionId) {
+        log.info("Balance debited notification sent to seller: {}, amount: {}, transaction: {}",
+                sellerId, amount, transactionId);
     }
 }

@@ -91,13 +91,19 @@ public class SecurityAuditService {
      */
     @Transactional
     public void logLoginFailed(String username, String ipAddress, String reason) {
+        // Truncate reason if it's too long
+        String truncatedReason = reason;
+        if (reason != null && reason.length() > 990) { // Leave room for "Login failed: "
+            truncatedReason = reason.substring(0, 990) + "...[truncated]";
+        }
+
         SecurityAudit audit = SecurityAudit.builder()
                 .eventType(SecurityEventType.LOGIN_FAILED)
                 .username(username)
                 .ipAddress(ipAddress)
                 .eventTimestamp(Instant.now())
                 .isSuccess(false)
-                .details("Login failed: " + reason)
+                .details("Login failed: " + truncatedReason)
                 .build();
 
         securityAuditRepository.save(audit);

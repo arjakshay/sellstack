@@ -14,10 +14,10 @@ import java.net.URI;
 @Configuration
 public class AwsSesConfig {
 
-    @Value("${aws.access-key-id:}")
+    @Value("${aws.ses.access-key:}")
     private String awsAccessKey;
 
-    @Value("${aws.secret-access-key:}")
+    @Value("${aws.ses.secret-key:}")
     private String awsSecretKey;
 
     @Value("${aws.region:ap-south-1}")

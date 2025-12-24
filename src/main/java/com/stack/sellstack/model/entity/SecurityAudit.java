@@ -48,7 +48,7 @@ public class SecurityAudit {
     @Column(name = "is_success", nullable = false)
     private Boolean isSuccess;
 
-    @Column(name = "details", length = 1000)
+    @Column(name = "details", length = 5000)
     private String details;
 
     @Column(name = "severity")

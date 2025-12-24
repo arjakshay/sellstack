@@ -135,4 +135,25 @@ public class JwtTokenProvider {
     public long getAccessTokenValidityInSeconds() {
         return this.accessTokenValidity / 1000;
     }
+
+    public String getClaimFromToken(String token, String claimName) {
+        try {
+            Claims claims = parseClaims(token);
+            return claims.get(claimName, String.class);
+        } catch (Exception e) {
+            log.warn("Failed to get claim '{}' from token: {}", claimName, e.getMessage());
+            return null;
+        }
+    }
+
+    // Or a more generic version that can return any type
+    public <T> T getClaimFromToken(String token, String claimName, Class<T> clazz) {
+        try {
+            Claims claims = parseClaims(token);
+            return claims.get(claimName, clazz);
+        } catch (Exception e) {
+            log.warn("Failed to get claim '{}' from token: {}", claimName, e.getMessage());
+            return null;
+        }
+    }
 }

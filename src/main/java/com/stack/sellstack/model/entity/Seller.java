@@ -33,6 +33,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"passwordHash"})
 public class Seller extends BaseAuditEntity {
 
     @Id
@@ -128,7 +129,10 @@ public class Seller extends BaseAuditEntity {
         return this.status == SellerStatus.ACTIVE;
     }
 
-    // Add a roles field or method
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 50)
+    private Role role;
+
     public Set<Role> getRoles() {
         // If you have a roles field, return it
         // If not, return a default set
@@ -161,6 +165,9 @@ public class Seller extends BaseAuditEntity {
         }
         if (marketingConsent == null) {
             marketingConsent = false;
+        }
+        if (role == null) {
+            role = Role.SELLER; // Default role
         }
     }
 

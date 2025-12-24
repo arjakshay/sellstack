@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -15,6 +16,14 @@ public class DailyAnalyticsResponse {
     private LocalDate date;
     private String channel;
 
+    // Sales analytics fields
+    private Integer salesCount;
+    private BigDecimal revenue;
+    private Integer newCustomers;
+    private Integer productViews;
+    private BigDecimal conversionRate;
+
+    // Communication analytics
     private EmailStats emailStats;
     private WhatsAppStats whatsappStats;
 

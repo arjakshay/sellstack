@@ -15,6 +15,8 @@ import com.stack.sellstack.service.notification.WhatsAppService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -126,8 +128,9 @@ public class MetaWhatsAppService implements WhatsAppService {
     @Transactional
     public void processMessageQueue() {
         Date currentTime = new Date();
+        Pageable limit = PageRequest.of(0, 100);
         List<WhatsAppQueue> pendingMessages = whatsAppQueueRepository
-                .findPendingMessages(currentTime, 50);
+                .findPendingMessagesWithLimit(currentTime, limit);
 
         log.info("Processing {} pending WhatsApp messages from queue", pendingMessages.size());
 

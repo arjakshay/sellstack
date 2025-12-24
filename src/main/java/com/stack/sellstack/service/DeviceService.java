@@ -58,7 +58,36 @@ public class DeviceService {
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new BusinessException("Seller not found"));
 
-        // Check active sessions count
+        // FIX: Check if active session already exists for this device
+        Optional<Session> existingSessionOpt = sessionRepository.findActiveSession(
+                sellerId,
+                deviceId,
+                Instant.now()
+        );
+
+        if (existingSessionOpt.isPresent()) {
+            Session existingSession = existingSessionOpt.get();
+
+            // Update the existing session instead of creating a new one
+            existingSession.setRefreshTokenHash(SecurityUtils.hashString(refreshToken));
+            existingSession.setLastAccessedAt(Instant.now());
+            existingSession.setExpiresAt(Instant.now().plus(refreshTokenValidityDays, ChronoUnit.DAYS));
+
+            // Update device info (in case browser/OS changed)
+            DeviceInfo deviceInfo = detectDeviceInfo(request);
+            existingSession.setDeviceName(deviceInfo.deviceName());
+            existingSession.setDeviceType(deviceInfo.deviceType());
+            existingSession.setOsName(deviceInfo.osName());
+            existingSession.setBrowserName(deviceInfo.browserName());
+            existingSession.setIpAddress(SecurityUtils.getClientIP(request));
+
+            Session updatedSession = sessionRepository.save(existingSession);
+
+            log.info("Updated existing session for seller: {}, device: {}", sellerId, deviceId);
+            return updatedSession;
+        }
+
+        // Check active sessions count (only if creating new session)
         List<Session> activeSessions = sessionRepository.findBySellerIdAndIsActive(sellerId, true);
 
         if (activeSessions.size() >= maxDevicesPerUser) {
@@ -77,10 +106,9 @@ public class DeviceService {
             );
         }
 
-        // Detect device information
+        // Create new session
         DeviceInfo deviceInfo = detectDeviceInfo(request);
 
-        // Create session
         Session session = Session.builder()
                 .seller(seller)
                 .sessionToken(generateSessionToken())

@@ -4,11 +4,14 @@ import com.stack.sellstack.security.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -31,10 +34,16 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final SecurityAuditFilter securityAuditFilter;
     private final CorsProperties corsProperties;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final CustomRateLimitFilter customRateLimitFilter;
+
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtTokenProvider);
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -52,12 +61,12 @@ public class SecurityConfig {
                         .csrfTokenRepository(tokenRepository)
                         .csrfTokenRequestHandler(requestHandler)
                         .ignoringRequestMatchers(
-                                "/api/v1/auth/**",  // Auth endpoints use JWT
-                                "/api/v1/webhook/**", // Webhooks from external services
-                                "/api/v1/public/**", // Public APIs
+                                "/api/v1/auth/**",
+                                "/api/v1/webhook/**",
+                                "/api/v1/public/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/api-docs/**"  // Add this
+                                "/api-docs/**"
                         )
                 )
 
@@ -65,6 +74,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+                // Disable anonymous authentication to force JWT
+                .anonymous(AbstractHttpConfigurer::disable)
 
                 // Authorization Rules
                 .authorizeHttpRequests(authz -> authz
@@ -83,9 +95,9 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/configuration/ui",
                                 "/configuration/security",
-                                "/api-docs/**",          // Add this
-                                "/api-docs",            // Add this
-                                "/api-docs/swagger-config",  // Add this
+                                "/api-docs/**",
+                                "/api-docs",
+                                "/api-docs/swagger-config",
                                 "/error"
                         ).permitAll()
 
@@ -95,14 +107,34 @@ public class SecurityConfig {
                         // Admin endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
+                        // Product endpoints - ALL require authentication
+                        .requestMatchers("/api/v1/products/**").authenticated()
+
+                        // Specific product methods with role requirements
+                        .requestMatchers(
+                                HttpMethod.POST, "/api/v1/products/**"
+                        ).hasRole("SELLER")
+                        .requestMatchers(
+                                HttpMethod.PUT, "/api/v1/products/**"
+                        ).hasRole("SELLER")
+                        .requestMatchers(
+                                HttpMethod.PATCH, "/api/v1/products/**"
+                        ).hasRole("SELLER")
+                        .requestMatchers(
+                                HttpMethod.DELETE, "/api/v1/products/**"
+                        ).hasRole("SELLER")
+                        .requestMatchers(
+                                "/api/v1/products/my/**"
+                        ).hasRole("SELLER")
+
                         // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
 
-                // Custom Filters - Use addFilterAt or addFilterBefore with proper ordering
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(securityAuditFilter, JwtAuthenticationFilter.class)
-                .addFilterBefore(customRateLimitFilter, SecurityAuditFilter.class)
+                // Custom Filters - IMPORTANT ORDER
+                .addFilterBefore(customRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(securityAuditFilter, JwtAuthenticationFilter.class)
 
                 // Security Headers
                 .headers(headers -> headers
@@ -163,11 +195,5 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
-    }
-
-    @Bean
-    public Argon2PasswordEncoder passwordEncoder() {
-        // Argon2id parameters (OWASP recommended)
-        return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
     }
 }

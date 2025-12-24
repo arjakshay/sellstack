@@ -32,29 +32,30 @@ public class DeliveryAnalyticsService {
                 .channel(channel);
 
         if (channel == null || channel.equals("EMAIL") || channel.equals("ALL")) {
+            // UPDATED METHOD NAMES
             long totalEmails = sellerId != null ?
-                    emailQueueRepository.countBySellerIdAndCreatedAtBetween(sellerId, startOfDay, endOfDay) :
-                    emailQueueRepository.countByCreatedAtBetween(startOfDay, endOfDay);
+                    emailQueueRepository.countEmailsBySellerIdAndCreatedAtBetween(sellerId, startOfDay, endOfDay) :
+                    emailQueueRepository.countEmailsByCreatedAtBetween(startOfDay, endOfDay);
 
             long sentEmails = sellerId != null ?
-                    emailQueueRepository.countBySellerIdAndStatusAndCreatedAtBetween(sellerId, "SENT", startOfDay, endOfDay) :
-                    emailQueueRepository.countByStatusAndCreatedAtBetween("SENT", startOfDay, endOfDay);
+                    emailQueueRepository.countEmailsBySellerIdAndStatusAndCreatedAtBetween(sellerId, "SENT", startOfDay, endOfDay) :
+                    emailQueueRepository.countEmailsByStatusAndCreatedAtBetween("SENT", startOfDay, endOfDay);
 
             long deliveredEmails = sellerId != null ?
-                    emailQueueRepository.countBySellerIdAndStatusAndCreatedAtBetween(sellerId, "DELIVERED", startOfDay, endOfDay) :
-                    emailQueueRepository.countByStatusAndCreatedAtBetween("DELIVERED", startOfDay, endOfDay);
+                    emailQueueRepository.countEmailsBySellerIdAndStatusAndCreatedAtBetween(sellerId, "DELIVERED", startOfDay, endOfDay) :
+                    emailQueueRepository.countEmailsByStatusAndCreatedAtBetween("DELIVERED", startOfDay, endOfDay);
 
             long failedEmails = sellerId != null ?
-                    emailQueueRepository.countBySellerIdAndStatusAndCreatedAtBetween(sellerId, "FAILED", startOfDay, endOfDay) :
-                    emailQueueRepository.countByStatusAndCreatedAtBetween("FAILED", startOfDay, endOfDay);
+                    emailQueueRepository.countEmailsBySellerIdAndStatusAndCreatedAtBetween(sellerId, "FAILED", startOfDay, endOfDay) :
+                    emailQueueRepository.countEmailsByStatusAndCreatedAtBetween("FAILED", startOfDay, endOfDay);
 
             long openedEmails = sellerId != null ?
-                    emailQueueRepository.countBySellerIdAndOpenedAtBetween(sellerId, startOfDay, endOfDay) :
-                    emailQueueRepository.countByOpenedAtBetween(startOfDay, endOfDay);
+                    emailQueueRepository.countEmailsBySellerIdAndOpenedAtBetween(sellerId, startOfDay, endOfDay) :
+                    emailQueueRepository.countEmailsByOpenedAtBetween(startOfDay, endOfDay);
 
             long clickedEmails = sellerId != null ?
-                    emailQueueRepository.countBySellerIdAndClickedAtBetween(sellerId, startOfDay, endOfDay) :
-                    emailQueueRepository.countByClickedAtBetween(startOfDay, endOfDay);
+                    emailQueueRepository.countEmailsBySellerIdAndClickedAtBetween(sellerId, startOfDay, endOfDay) :
+                    emailQueueRepository.countEmailsByClickedAtBetween(startOfDay, endOfDay);
 
             builder.emailStats(DailyAnalyticsResponse.EmailStats.builder()
                     .total(totalEmails)
@@ -70,6 +71,7 @@ public class DeliveryAnalyticsService {
         }
 
         if (channel == null || channel.equals("WHATSAPP") || channel.equals("ALL")) {
+            // WhatsApp methods might also need updating if you changed them
             long totalWhatsApp = sellerId != null ?
                     whatsAppQueueRepository.countBySellerIdAndCreatedAtBetween(sellerId, startOfDay, endOfDay) :
                     whatsAppQueueRepository.countByCreatedAtBetween(startOfDay, endOfDay);
@@ -109,22 +111,22 @@ public class DeliveryAnalyticsService {
                 .date(startDate)
                 .channel("ALL");
 
-        // Email stats for the period
+        // Email stats for the period - UPDATED METHOD NAMES
         long totalEmails = sellerId != null ?
-                emailQueueRepository.countBySellerIdAndCreatedAtBetween(sellerId, startDate, endDate) :
-                emailQueueRepository.countByCreatedAtBetween(startDate, endDate);
+                emailQueueRepository.countEmailsBySellerIdAndCreatedAtBetween(sellerId, startDate, endDate) :
+                emailQueueRepository.countEmailsByCreatedAtBetween(startDate, endDate);
 
         long deliveredEmails = sellerId != null ?
-                emailQueueRepository.countBySellerIdAndStatusAndCreatedAtBetween(sellerId, "DELIVERED", startDate, endDate) :
-                emailQueueRepository.countByStatusAndCreatedAtBetween("DELIVERED", startDate, endDate);
+                emailQueueRepository.countEmailsBySellerIdAndStatusAndCreatedAtBetween(sellerId, "DELIVERED", startDate, endDate) :
+                emailQueueRepository.countEmailsByStatusAndCreatedAtBetween("DELIVERED", startDate, endDate);
 
         long openedEmails = sellerId != null ?
-                emailQueueRepository.countBySellerIdAndOpenedAtBetween(sellerId, startDate, endDate) :
-                emailQueueRepository.countByOpenedAtBetween(startDate, endDate);
+                emailQueueRepository.countEmailsBySellerIdAndOpenedAtBetween(sellerId, startDate, endDate) :
+                emailQueueRepository.countEmailsByOpenedAtBetween(startDate, endDate);
 
         long clickedEmails = sellerId != null ?
-                emailQueueRepository.countBySellerIdAndClickedAtBetween(sellerId, startDate, endDate) :
-                emailQueueRepository.countByClickedAtBetween(startDate, endDate);
+                emailQueueRepository.countEmailsBySellerIdAndClickedAtBetween(sellerId, startDate, endDate) :
+                emailQueueRepository.countEmailsByClickedAtBetween(startDate, endDate);
 
         // WhatsApp stats for the period
         long totalWhatsApp = sellerId != null ?
@@ -172,4 +174,5 @@ public class DeliveryAnalyticsService {
                     whatsAppQueueRepository.averageDeliveryTimeBySentAtAfter(last30Days);
         }
     }
+
 }
